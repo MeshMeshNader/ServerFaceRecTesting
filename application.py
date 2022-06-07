@@ -2,6 +2,8 @@ import face_recognition
 import numpy as np
 import urllib.request
 import json
+import io
+import base64
 from flask import Flask, request, abort
 import logging
 
@@ -21,6 +23,10 @@ def Recognize_Face():
     if not request.json or 'url' not in request.json:
         abort(400)
 
+    im_b64 = request.json['image']
+    img_bytes = base64.b64decode(im_b64.encode('utf-8'))
+    img = io.BytesIO(img_bytes)
+
     all_face_encodings = json.loads(request.json['encodings'])
 
     img_url = request.json['url']
@@ -28,8 +34,10 @@ def Recognize_Face():
     known_names = list(all_face_encodings.keys())
     known_faces = np.array(list(all_face_encodings.values()))
 
-    response = urllib.request.urlopen(img_url)
-    image = face_recognition.load_image_file(response)
+    # response = urllib.request.urlopen(img_url)
+    # image = face_recognition.load_image_file(response)
+
+    image = face_recognition.load_image_file(img)
 
     locations = face_recognition.face_locations(image, model=MODEL)
 
