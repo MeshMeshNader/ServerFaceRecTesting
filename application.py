@@ -9,23 +9,34 @@ import logging
 
 app = Flask(__name__)
 app.logger.setLevel(logging.DEBUG)
-
+img = ''
 
 TOLERANCE = 0.59
 MODEL = 'cnn'  # 'hog' or 'cnn' - CUDA accelerated (if available) deep-learning pretrained model
 
 
+@app.route("/FaceRecognitionTestingGetImage", methods=['POST'])
+def Get_Image():
+    if not request.json or 'image' not in request.json:
+        abort(400)
+
+    im_b64 = request.json['image']
+    img_bytes = base64.b64decode(im_b64.encode('utf-8'))
+    global img
+    img = io.BytesIO(img_bytes)
+
+    result_dict = {"output": 'Done saving image'}
+    return result_dict
+
+
 @app.route("/FaceRecognitionTesting", methods=['POST'])
 def Recognize_Face():
+    global img
     if not request.json or 'encodings' not in request.json:
         abort(400)
 
     if not request.json or 'url' not in request.json:
         abort(400)
-
-    im_b64 = request.json['image']
-    img_bytes = base64.b64decode(im_b64.encode('utf-8'))
-    img = io.BytesIO(img_bytes)
 
     all_face_encodings = json.loads(request.json['encodings'])
 
@@ -59,5 +70,6 @@ def Recognize_Face():
 
     result_dict = {"output": result}
     return result_dict
+
 
 # app.run(debug=True)
